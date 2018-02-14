@@ -25,7 +25,7 @@ class BurpExtender : IBurpExtender {
 
 class ContextMenuFactory : IContextMenuFactory {
     override fun createMenuItems(invocation: IContextMenuInvocation): List<JMenuItem> {
-        if (invocation.invocationContext != 4.toByte()) { // IContextMenuInvocation.CONTEXT_TARGET_SITE_MAP_TREE
+        if (invocation.invocationContext != IContextMenuInvocation.CONTEXT_TARGET_SITE_MAP_TREE) {
             return arrayListOf()
         }
 
