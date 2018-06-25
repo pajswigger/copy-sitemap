@@ -29,7 +29,7 @@ class ContextMenuFactory : IContextMenuFactory {
             return arrayListOf()
         }
 
-        val selection = invocation.selectedMessages
+        val selection = invocation.selectedMessages!!
         if (selection.size != 1) {
             return arrayListOf()
         }
@@ -43,7 +43,7 @@ class ContextMenuFactory : IContextMenuFactory {
 
 class ContextMenuListener(var invocation: IContextMenuInvocation) : AbstractAction() {
     override fun actionPerformed(e: ActionEvent) {
-        val item = invocation.selectedMessages[0]
+        val item = invocation.selectedMessages!![0]
         val requestInfo = BurpExtender.cb.helpers.analyzeRequest(item.httpService, item.request)
         var source = requestInfo.url
         if(source.port == source.defaultPort) {
@@ -70,33 +70,33 @@ class UrlCopier(val progressDialog: ProgressDialog, val source: URL, val target:
     }
 
     override fun run() {
-        try {
-            val targetHost = hostHeader(target)
-            val targetService = BurpExtender.cb.helpers.buildHttpService(target.host, target.port, target.protocol)
+        val targetHost = hostHeader(target)
+        val targetService = BurpExtender.cb.helpers.buildHttpService(target.host, target.port, target.protocol)
 
-            for (item in BurpExtender.cb.getSiteMap(source.toString())) {
-                if (item.response == null) {
-                    continue
-                }
-                val requestInfo = BurpExtender.cb.helpers.analyzeRequest(item.httpService, item.request)
-                val headers = requestInfo.headers.toMutableList()
-                val body = Arrays.copyOfRange(item.request, requestInfo.bodyOffset, item.request.size)
-
-                headers[0] = headers[0].replace(source.path, target.path)
-                for (i in headers.indices) {
-                    if (headers[i].startsWith("Host:")) {
-                        headers[i] = "Host: ${targetHost}"
-                        break
-                    }
-                }
-
-                val newItem = EditableHttpRequestResponse(item)
-                newItem.request = BurpExtender.cb.helpers.buildHttpMessage(headers, body)
-                newItem.httpService = targetService
-                BurpExtender.cb.addToSiteMap(newItem)
+        for (item in BurpExtender.cb.getSiteMap(source.toString())) {
+            try {
+            if (item.response == null) {
+                continue
             }
-        } catch (ex: Exception) {
-            ex.printStackTrace(PrintStream(BurpExtender.cb.stderr))
+            val requestInfo = BurpExtender.cb.helpers.analyzeRequest(item.httpService, item.request)
+            val headers = requestInfo.headers.toMutableList()
+            val body = Arrays.copyOfRange(item.request, requestInfo.bodyOffset, item.request.size)
+
+            headers[0] = headers[0].replace(source.path, target.path)
+            for (i in headers.indices) {
+                if (headers[i].startsWith("Host:")) {
+                    headers[i] = "Host: ${targetHost}"
+                    break
+                }
+            }
+
+            val newItem = EditableHttpRequestResponse(item)
+            newItem.request = BurpExtender.cb.helpers.buildHttpMessage(headers, body)
+            newItem.httpService = targetService
+            BurpExtender.cb.addToSiteMap(newItem)
+            } catch (ex: Exception) {
+                BurpExtender.cb.printError(ex.toString())
+            }
         }
         progressDialog.isVisible = false
     }
