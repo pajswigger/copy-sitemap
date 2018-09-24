@@ -82,7 +82,9 @@ class UrlCopier(val progressDialog: ProgressDialog, val source: URL, val target:
                 for (i in headers.indices) {
                     if (headers[i].startsWith("Host:")) {
                         headers[i] = "Host: ${targetHost}"
-                        break
+                    }
+                    if (headers[i].startsWith("Referer:")) {
+                        headers[i] = headers[i].replace(source.toString(), target.toString())
                     }
                 }
 
